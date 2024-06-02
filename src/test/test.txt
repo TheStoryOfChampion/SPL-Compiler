@@ -1,0 +1,18 @@
+
+def p_1 {
+    a_1: num,
+    b_2: bool,
+    c_3: proc,
+    repeat{
+        if or(T, F) then{
+            a_1 = add(a_1, 5);
+            dummy
+        } else{
+            a_1 = add(a_1, 1);
+            dummy
+        };
+        dummy
+    }
+    until larger(a_1, 5);
+    dummy
+}
