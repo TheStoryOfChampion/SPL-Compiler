@@ -117,7 +117,7 @@ public class Parser {
             children = addChild(parseProcDefs(), children, SymbolType.PROCDEFS);
 //            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
         } else
-            throw new Exception("Error at PROG: no action for "+currentNode);
+            return null;
         return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
 
 /*
@@ -163,29 +163,7 @@ public class Parser {
             children = addChild(parseVar(), children, SymbolType.NAME);
             children.add(match(":"));
             children = addChild(parseTYP(), children, SymbolType.TYPE);
-        }else if(currentNode.getValue().equals("num"))
-        {
-            children.add(match("num"));
-            children = addChild(parseVar(), children, SymbolType.NAME);
-            children.add(match(":"));
-            children = addChild(parseTYP(), children, SymbolType.TYPE);
-        } else if(currentNode.getValue().equals("bool")){
-            children.add(match("bool"));
-            children = addChild(parseVar(), children, SymbolType.NAME);
-            children.add(match(":"));
-            children = addChild(parseTYP(), children, SymbolType.TYPE);
-        } else if(currentNode.getValue().equals("proc")){
-            children.add(match("proc"));
-            children = addChild(parseVar(), children, SymbolType.NAME);
-            children.add(match(":"));
-            children = addChild(parseTYP(), children, SymbolType.TYPE);
-        } else if(currentNode.getValue().equals("text")){
-            children.add(match("text"));
-            children = addChild(parseVar(), children, SymbolType.NAME);
-            children.add(match(":"));
-            children = addChild(parseTYP(), children, SymbolType.TYPE);
-        }
-        else
+        } else
             throw new Exception("[Parse Error] D has no action for "+currentNode);
 
         return new TreeNode(new Node(SymbolType.D.name(), null), children);
