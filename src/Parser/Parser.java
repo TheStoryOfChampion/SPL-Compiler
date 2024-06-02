@@ -98,17 +98,27 @@ public class Parser {
         ArrayList<TreeNode> children = new ArrayList<>();
         if(isFirst(SymbolType.DECL, currentNode)){
             children = addChild(parseVarDecl(), children, SymbolType.DECL);
-            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
+            if (isFirst(SymbolType.CODE, currentNode)){
+                children = addChild(parseCode(), children, SymbolType.CODE);
+            }
+            if(isFirst(SymbolType.PROCDEFS, currentNode)){
+                children = addChild(parseProcDefs(), children,SymbolType.PROCDEFS);
+            }
+//            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
         }
         else if (isFirst(SymbolType.CODE, currentNode)){
-            children = addChild(parseAlg(), children, SymbolType.CODE);
-            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
+            children = addChild(parseCode(), children, SymbolType.CODE);
+            if(isFirst(SymbolType.PROCDEFS, currentNode)){
+                children = addChild(parseProcDefs(), children,SymbolType.PROCDEFS);
+            }
+//            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
         }
         else if(isFirst(SymbolType.PROCDEFS, currentNode)){
             children = addChild(parseProcDefs(), children, SymbolType.PROCDEFS);
-            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
+//            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
         } else
             throw new Exception("Error at PROG: no action for "+currentNode);
+        return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
 
 /*
     if (currentNode.getValue().equals("def"))
@@ -193,26 +203,54 @@ public class Parser {
 
     private TreeNode parseCode() throws Exception
     {
+        ArrayList<TreeNode> children = new ArrayList<>();
         if(isFirst(SymbolType.CALLP, currentNode)){
-            return new TreeNode(new Node(SymbolType.CALLP.name(), null), new ArrayList<TreeNode>(){{add(match(UDN));}});
-        }else
+            children = addChild(parseCallP(), children, SymbolType.CALLP);
+            children.add(match(";"));
+//            children = addChild(parseCode(), children, SymbolType.CODE);
+        }else if(isFirst(SymbolType.INOUT, currentNode)){
+            children = addChild(parseInout(), children, SymbolType.INOUT);
+            children.add(match(";"));
+//            children = addChild(parseCode(), children, SymbolType.CODE);
+        }
+        else
             throw new Exception("[Parse Error] CODE has no action for " + currentNode);
+
+        return new TreeNode(new Node(SymbolType.CODE.name(), null), children);
+
     }
 
     private TreeNode parseInout() throws Exception
     {
-        if(isFirst(SymbolType.CALLP, currentNode)){
-            return new TreeNode(new Node(SymbolType.CALLP.name(), null), new ArrayList<TreeNode>(){{add(match(UDN));}});
-        }else
-            throw new Exception("[Parse Error] CODE has no action for " + currentNode);
+        ArrayList<TreeNode> children = new ArrayList<>();
+        if(currentNode.getValue().equals("input")){
+            children.add(match("input"));
+            children = addChild(parseVar(), children, SymbolType.NAME);
+        } else if(currentNode.getValue().equals("print")){
+            children.add(match("print"));
+            if(isFirst(SymbolType.NAME, currentNode)){
+                children = addChild(parseVar(), children, SymbolType.NAME);
+
+            } else if (isFirst(SymbolType.CONST, currentNode)){
+                children = addChild(parseConst(), children, SymbolType.CONST);
+            }
+        } else
+            throw new Exception("[Parse Error] INOUT has no action for " + currentNode);
+
+        return new TreeNode(new Node(SymbolType.CALLP.name(), null), children);
+
     }
 
     private TreeNode parseCallP() throws Exception
     {
-        if(isFirst(SymbolType.CALLP, currentNode)){
-            return new TreeNode(new Node(SymbolType.CALLP.name(), null), new ArrayList<TreeNode>(){{add(match(UDN));}});
+        ArrayList<TreeNode> children = new ArrayList<>();
+        if(currentNode.getValue().equals("exec")){
+            children.add(match("exec"));
+            children = addChild(parseVar(), children, SymbolType.NAME);
         }else
-            throw new Exception("[Parse Error] CODE has no action for " + currentNode);
+            throw new Exception("[Parse Error] CALLP has no action for " + currentNode);
+
+        return new TreeNode(new Node(SymbolType.CALLP.name(), null), children);
     }
 
     private TreeNode parseTYP() throws Exception
@@ -488,6 +526,7 @@ public class Parser {
                 break;
             case CODE:
                 list.addAll(first(SymbolType.INOUT));
+                list.addAll(first(SymbolType.CALLP));
                 list.add(";");
                 break;
             case PROCDEFS:
@@ -545,6 +584,7 @@ public class Parser {
                 break;
             case INOUT:
                 list.add("input");
+                list.add("print");
                 list.add(UDN);
                 break;
             case EXPR:

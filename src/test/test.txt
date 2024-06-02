@@ -1,4 +1,5 @@
-
+p_1: proc,
+exec p_1;
 def p_1 {
     a_1: num,
     b_2: bool,

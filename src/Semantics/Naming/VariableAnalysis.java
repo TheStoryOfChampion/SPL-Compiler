@@ -379,7 +379,7 @@ public class VariableAnalysis {
                     if(pd != null)
                         node.getChildren().get(1).setSemanticName(getSemanticName(pd));
                 }else
-                    throw new Exception("[Sementics.Naming Error] no procedure with the name \""+name+"\" was not found within procedure calling range");
+                    throw new Exception("[Sementics.Naming Error] no procedure with the name \""+name+"\" was found within procedure calling range");
             }
 
             for (TreeNode child : node.getChildren())

@@ -1,1 +1,1 @@
-[DECL-APPL Error] procedure "p_1" is never called
+[Sementics.Naming Error] no procedure with the name "NAME" was not found within procedure calling range
