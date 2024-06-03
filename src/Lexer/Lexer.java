@@ -330,7 +330,7 @@ public class Lexer {
 
     private boolean isShortStringChar(char c)
     {
-        return ((c == ' ' || isNumber(c) || ((c >= 'A') && (c <= 'Z')) ));
+        return ((c == ' ' || isNumber(c) || ((c >= 'a' && c <= 'z') ||((c >= 'A') && (c <= 'Z'))) ));
     }
 
     private boolean isUDN(char c)
@@ -372,11 +372,7 @@ public class Lexer {
         String[] ioCommands = {"input", "print", "dummy"};
         String[] keywords = { "repeat", "if", "then", "else", "do", "until", "exec", "def"};
 
-
-        if(sUDN.equals("halt"))
-            lst.add(new Node(sUDN, NodeType.Keyword, NodeSubType.SpecialCommand));
-
-        else if( stringWithinList( compOperator, sUDN ) )
+        if( stringWithinList( compOperator, sUDN ) )
             lst.add(new Node(sUDN, NodeType.Keyword, NodeSubType.Comparison));
 
         else if( stringWithinList( ioCommands, sUDN ))

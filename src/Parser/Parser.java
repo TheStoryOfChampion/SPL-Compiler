@@ -215,7 +215,7 @@ public class Parser {
         } else
             throw new Exception("[Parse Error] INOUT has no action for " + currentNode);
 
-        return new TreeNode(new Node(SymbolType.CALLP.name(), null), children);
+        return new TreeNode(new Node(SymbolType.INOUT.name(), null), children);
 
     }
 

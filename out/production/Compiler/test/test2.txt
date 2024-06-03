@@ -1,7 +1,7 @@
 s_1:text,
 s_2:text,
-result:text,
-input s1;
-input s2;
-result = add(s1, s2);
-print result;
+r_1:text,
+input s_1,
+input s_2,
+r_1 = add(s_1, s_2);
+print r_1;
