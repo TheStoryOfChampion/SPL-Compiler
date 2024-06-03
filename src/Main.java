@@ -1,3 +1,4 @@
+import CodeGeneration.IMCGenerator;
 import Lexer.Lexer;
 import Lexer.LinkedList;
 import Node.TreeNode;
@@ -5,6 +6,7 @@ import Parser.Parser;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.CoderMalfunctionError;
 import java.util.Scanner;
 import Semantics.Scoping;
 import Semantics.Naming.VariableAnalysis;
@@ -48,6 +50,11 @@ public class Main {
             writeToFile(treeString, count++);
             System.out.println("Done Variable Checking.......");
             System.out.println("Done Type Checking...........");
+            System.out.println("Generating Code..............");
+            IMCGenerator codeGen = new IMCGenerator(namedTree);
+            TreeNode GeneratedCode = codeGen.start();
+            writeToFile(treeString, count++);
+            System.out.println("Done generating code.........");
 //..........................Code Generator...............................................
 
 
