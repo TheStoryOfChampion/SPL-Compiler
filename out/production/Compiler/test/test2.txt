@@ -1,0 +1,7 @@
+s_1:text,
+s_2:text,
+result:text,
+input s1;
+input s2;
+result = add(s1, s2);
+print result;

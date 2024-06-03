@@ -365,7 +365,8 @@ public class VariableAnalysis {
 
             if(node.isType(SymbolType.CALLP))
             {
-                String name = node.getChildren().get(1).getValue();
+                TreeNode temp = node.getChildren().get(1);
+                String name = temp.getChildren().get(0).getValue();
 
                 // Rule: The unique “main” cannot be a UserDefinedName for any declared procedure in an SPL program
                 if(name.equals("main"))
@@ -373,8 +374,8 @@ public class VariableAnalysis {
 
                 //Rule: Any procedure can only call itself or a sub-procedure that is declared in an immediate
                 // Child-scope
-                if(hasCorrespondingPD(node))
-                {
+                    if(hasCorrespondingPD(node))
+                    {
                     TreeNode pd = getCorrespondingPD(node);
                     if(pd != null)
                         node.getChildren().get(1).setSemanticName(getSemanticName(pd));

@@ -224,6 +224,7 @@ public class Parser {
         ArrayList<TreeNode> children = new ArrayList<>();
         if(currentNode.getValue().equals("exec")){
             children.add(match("exec"));
+//            System.out.println(currentNode.getValue());
             children = addChild(parseVar(), children, SymbolType.NAME);
         }else
             throw new Exception("[Parse Error] CALLP has no action for " + currentNode);
