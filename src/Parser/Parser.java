@@ -90,7 +90,7 @@ public class Parser {
                 throw new Exception("[Parse Error] PROG has no action for "+currentNode);*/
         }
         else
-            throw new Exception("[Parse] Error at first node is null");
+            throw new Exception("[Parse] First node is null");
     }
 
     private TreeNode parseSPL() throws Exception
@@ -260,11 +260,9 @@ public class Parser {
 
         if (isFirst(SymbolType.DECL, currentNode)){
             children = addChild(parseVarDecl(), children, SymbolType.DECL);
-            children = addChild(parseAlg(), children, SymbolType.COMMANDS);
-            return new TreeNode(new Node(SymbolType.BODY.name(), null), children);
-        } else {
-            throw new Exception("[Parse Error] BODY has no action for " + currentNode);
         }
+        children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+        return new TreeNode(new Node(SymbolType.BODY.name(), null), children);
     }
 
     private TreeNode parseAlg() throws Exception
@@ -274,13 +272,13 @@ public class Parser {
         {
             children = addChild(parseInstr(), children, SymbolType.INSTR);
             children.add(match(";"));
-            if (isFirst(SymbolType.COMMANDS, currentNode))
-                children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+            children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+        } else if(currentNode.getValue().equals("dummy")){
             children.add(match("dummy"));
-            return new TreeNode(new Node(SymbolType.COMMANDS.name(), null), children) ;
         }
         else
             throw new Exception("[Parse Error] COMMANDS has no action for "+currentNode );
+        return new TreeNode(new Node(SymbolType.COMMANDS.name(), null), children) ;
     }
 
     private TreeNode parseInstr() throws Exception
@@ -358,9 +356,9 @@ public class Parser {
         }else if (currentNode.getValue().equals("or")){
             children.add(match("or"));
             children.add(match("("));
-//            children = addChild(parseExpr(), children, SymbolType.EXPR);
+            children = addChild(parseExpr(), children, SymbolType.EXPR);
             children.add(match(","));
-//            children = addChild(parseExpr(), children, SymbolType.EXPR);
+            children = addChild(parseExpr(), children, SymbolType.EXPR);
             children.add(match(")"));
         }else if (currentNode.getValue().equals("and")){
             children.add(match("and"));
@@ -411,14 +409,11 @@ public class Parser {
             children = addChild(parseExpr(), children, SymbolType.EXPR);
             children.add(match("then"));
             children.add(match("{"));
-            if(isFirst(SymbolType.COMMANDS, currentNode))
-                children = addChild(parseAlg(), children, SymbolType.COMMANDS);
-
+            children = addChild(parseAlg(), children, SymbolType.COMMANDS);
             children.add(match("}"));
             children.add(match("else"));
             children.add(match("{"));
-            if(isFirst(SymbolType.COMMANDS, currentNode))
-                children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+            children = addChild(parseAlg(), children, SymbolType.COMMANDS);
             children.add(match("}"));
             return new TreeNode(new Node(SymbolType.BRANCH.name(), null), children);
         }
@@ -452,8 +447,14 @@ public class Parser {
 
             if(isFirst(SymbolType.BODY, currentNode))
                 children = addChild(parseBody(), children, SymbolType.BODY);
+            else
+                throw new Exception("[Parse Error] ProcDef" + children.get(2).node.getValue() + " has no BODY.");
 
             children.add(match("}"));
+
+            if (isFirst(SymbolType.PROCDEFS, currentNode)){
+                parseProcDefs();
+            }
 
             return new TreeNode(new Node(SymbolType.PROCDEFS.name(), null), children);
         }

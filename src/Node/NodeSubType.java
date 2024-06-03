@@ -17,5 +17,6 @@ public enum NodeSubType {
     IOCommand,
     VarType,
     Colon,
-    Name,
+    T,
+    F,
 }

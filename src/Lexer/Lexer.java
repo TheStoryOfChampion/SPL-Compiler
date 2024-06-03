@@ -447,12 +447,15 @@ public class Lexer {
     }
 
     private boolean isTruth(char c){
-        if((c == 'T') || (c == 'F')){
+        if((c == 'T')){
+            lst.add("T", NodeType.Keyword, NodeSubType.T);
             return true;
         }
-        else {
+        else if(c == 'F'){
+            lst.add("F", NodeType.Keyword, NodeSubType.F);
             return false;
         }
+        return false;
     }
 
 }
