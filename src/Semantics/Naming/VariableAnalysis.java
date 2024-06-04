@@ -57,7 +57,7 @@ public class VariableAnalysis {
                 CallProcs.add(node);
             else if (node.isType(SymbolType.DECL))
             {
-                if(!node.firstChild().getValue().endsWith("arr"))
+                if(!node.firstChild().getValue().endsWith("proc"))
                 {
                     node.lastChild().firstChild().setSemanticName("n"+nCount++);
                     Decls.add(node);
@@ -365,8 +365,7 @@ public class VariableAnalysis {
 
             if(node.isType(SymbolType.CALLP))
             {
-                TreeNode temp = node.getChildren().get(1);
-                String name = temp.getChildren().get(0).getValue();
+                String name = node.getValue();
 
                 // Rule: The unique “main” cannot be a UserDefinedName for any declared procedure in an SPL program
                 if(name.equals("main"))
@@ -374,13 +373,15 @@ public class VariableAnalysis {
 
                 //Rule: Any procedure can only call itself or a sub-procedure that is declared in an immediate
                 // Child-scope
-                    if(hasCorrespondingPD(node))
-                    {
+                if(hasCorrespondingPD(node))
+                {
                     TreeNode pd = getCorrespondingPD(node);
                     if(pd != null)
                         node.getChildren().get(1).setSemanticName(getSemanticName(pd));
+//                    return;
                 }else
                     throw new Exception("[Sementics.Naming Error] no procedure with the name \""+name+"\" was found within procedure calling range");
+                return;
             }
 
             for (TreeNode child : node.getChildren())
@@ -439,7 +440,7 @@ public class VariableAnalysis {
                     // if PD node's scope = node's scope or
                     // PD node's scope = node scope's parent scope
                     if(pd.getScope().getParentScope() == null)
-                        throw new Exception("[Scoping Error] PD cannot have a cope of 0");
+                        throw new Exception("[Scoping Error] PD cannot have a scope of 0");
                     if (pd.getScope().getParentScope().getID().equals(node.getScopeID()) || pd.getScopeID().equals(node.getScopeID()))
                     {
                         if (sameNameProc(pd, node))
@@ -506,7 +507,7 @@ public class VariableAnalysis {
     private boolean sameNameProc(TreeNode node1, TreeNode node2)
     {
         String name1 = node1.getChildren().get(1).getValue();
-        String name2 = node2.getChildren().get(1).getValue();
+        String name2 = node2.getChildren().get(1).getChildren().get(0).getValue();
         return name1.equals(name2);
     }
 

@@ -27,7 +27,7 @@ public class Scoping {
                 return treeRoot;
             }
         }
-        throw new Exception("root node is not SPL");
+        throw new Exception("Program is not in SPL");
 
     }
 
@@ -53,7 +53,7 @@ public class Scoping {
     {
         if(treeRoot != null)
         {
-            return printSubTree(treeRoot, "", 0);
+            return printSubTree(treeRoot, "", sIDCount);
         }
         return "tree root is null";
     }
