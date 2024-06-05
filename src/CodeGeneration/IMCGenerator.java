@@ -1,5 +1,6 @@
 package CodeGeneration;
 
+import Node.Node;
 import Node.Scope;
 import Node.SymbolType;
 import Node.TreeNode;
@@ -9,12 +10,20 @@ public class IMCGenerator {
     private TreeNode treeRoot;
     static int LineCounter = 10;
     public static String BasicCode = "";
+    boolean inBranch = false;
+    boolean inLoop = false;
+    int branchCount = 0;
+    int loopCount = 0;
+    int scopeNum = 0;
+    String logicExpr = "";
+    int currentProcID = 0;
+    Scope scoping = null;
     public IMCGenerator(TreeNode treeRoot)
     {
         this.treeRoot = treeRoot;
     }
 
-    public TreeNode start() throws Exception
+    public String start() throws Exception
     {
         if(treeRoot != null){
             if(treeRoot.getValue().equals(SymbolType.PROG.name()) && !treeRoot.isTerminal() )
@@ -23,9 +32,9 @@ public class IMCGenerator {
                 treeRoot.setScope(scope);
                 for (TreeNode child: treeRoot.getChildren())
                 {
-                    crawlDown(child, 1, "PROCDEF");
+                    crawlDown(child, 1, "PROG");
                 }
-                return treeRoot;
+                return BasicCode;
             }
         }
         throw new Exception("root node is not SPL");
@@ -39,36 +48,55 @@ public class IMCGenerator {
 
 
         if(node.isTerminal()){
-            if(node.getValue().equals("PROCDEF")){
+            if(node.getValue().equals("PROG")){
                 if(node.getChildren().size() ==2){
                     crawlDown(node.getChildren().get(0), currentScope, currentProc);
-                    BasicCode+= String.valueOf(LineCounter) + " END\n";
+                    BasicCode+= String.valueOf(LineCounter) + "\n";
                     LineCounter+=10;
                     crawlDown(node.getChildren().get(1), currentScope, currentProc);
                 }
                 else{
                     crawlDown(node.getChildren().get(0), currentScope, currentProc);
-                    BasicCode += String.valueOf(LineCounter) + " END\n";
+                    BasicCode += String.valueOf(LineCounter) + "\n";
                     LineCounter+=10;
 
                 }
                 return;
             }
             else if(node.getValue().equals("INOUT")){
-
                 TreeNode theNode = node.getChildren().get(1); // NUMVAR
+                theNode = theNode.getChildren().get(1); // DIGITS
+                if(node.getChildren().get(0).equals("input")){
+                    theNode = node.getChildren().get(1); // NUMVAR
+                    theNode = theNode.getChildren().get(1);// DIGITS
+                    String digits = concatenateDigits(theNode);
+                    BasicCode += LineCounter + " INPUT \"\"; " + " n" + digits + "\n ";
+                    LineCounter += 10;
+                }
+                else if(node.getChildren().get(0).equals("print")){ // TEXT OR VALUE
+                    if (theNode.getValue().equals("text")) {
+                        theNode = theNode.getChildren().get(1); // STRINGV
+                        String digits = concatenateDigits(theNode);
+                        TreeNode theNode2 = theNode.getChildren().get(1);
+                        BasicCode += LineCounter + "  PRINT ; " + " s" + digits + "$\n ";
+                        LineCounter += 10;
+                    } else if (theNode.getValue().equals("VALUE")) {
+                        theNode = theNode.getChildren().get(1); // NUMVAR
+                        String digits = concatenateDigits(theNode);
+                        theNode = theNode.getChildren().get(1);// DIGITS
 
-                theNode = theNode.getChildren().get(1);// DIGITS
+                        BasicCode += LineCounter + "  PRINT ; " + " n" + digits + "\n ";
+                        LineCounter += 10;
 
-                String digits = concatenateDigits(theNode);
+                    }
+                }
 
 
-                BasicCode += LineCounter + " INPUT \"\"; " + " n" + digits + "\n ";
-                LineCounter += 10;
+
                 // LineCounter INPUT “”; var_name
 
             }
-            else if(node.getValue().equals("OUTPUT")){
+            /*else if(node.getValue().equals("OUTPUT")){
                 TreeNode theNode = node.getChildren().get(0); // TEXT OR VALUE
                 if (theNode.getValue().equals("TEXT")) {
                     theNode = theNode.getChildren().get(1); // STRINGV
@@ -89,7 +117,7 @@ public class IMCGenerator {
                     LineCounter += 10;
 
                 }
-            }
+            }*/
             else if(node.getValue().equals("ASSGN")){
                 TransAssgn(node);
             }
@@ -97,12 +125,13 @@ public class IMCGenerator {
             else if(node.getValue().equals("BRANCH")){
 
                 TransBra(node, currentScope, currentProc);
-
+                branchCount++;
                 return;
             }
             else if(node.getValue().equals("LOOP")){
 
                 TransLP(node, currentScope, currentProc);
+                loopCount++;
                 return;
             }
 
@@ -110,34 +139,58 @@ public class IMCGenerator {
                 crawlDown(child, currentScope, currentProc);
             }
 
-        }else{
-            if(node.getValue().equals("h")){
-                BasicCode += LineCounter + " STOP" +"\n ";
-                LineCounter += 10;
+        } else if(node.getValue().equals("CALLP")){
+            String procName = node.getChildren().get(1).getChildren().get(0).getValue();
+            BasicCode += String.valueOf(LineCounter)+ " GOSUB " + procName + "\n";
+            LineCounter += 10;
 
+        } else if(node.getValue().equals("dummy")){
+            BasicCode += LineCounter + " RETURN" +"\n ";
+            LineCounter += 10;
+        }
+        else if (node.getValue().equals("PROCDEFS")){
+            if (!node.getChildren().isEmpty()){
+                String proc = node.getChildren().get(1).getChildren().get(0).getValue();
+                for (int c = 0 ; c < BasicCode.length() ; c++){
+                    if (BasicCode.charAt(c) == 'G'){
+                        String gSub = "";
+                        for (int i = c ; i < BasicCode.length() ; i++){
+                            if (BasicCode.charAt(i) == ' ')
+                                break;
+                            gSub += BasicCode.charAt(i);
+                        }
+
+                        if (gSub.equals("GOSUB")){
+                            BasicCode = BasicCode.replace(gSub + " " + proc, gSub + " " + String.valueOf(LineCounter));
+                            break;
+                        }
+                    }
+                }
+                crawlDown(node.getChildren().get(3), currentScope, proc);
             }
+        }
+        else{
+
             crawlDown(null, currentScope, currentProc);
         }
     }
 
     private void TransLP(TreeNode node, int currentScope, String currentProc) {
-        String boolexpr = TransBoolExpr(node.getChildren().get(2));
-
+        String boolexpr = TransBoolExpr(node.getChildren().get(5));
+        int loops = loopCount;
         int enL = LineCounter;
-
-
-        BasicCode += String.valueOf(LineCounter) + " " + "IF " + boolexpr + " Then GOTO other"+    "\n";
+        int temp = loops;
+        inLoop = true;
+        crawlDown(node.getChildren().get(2), currentScope, currentProc);
+        BasicCode += String.valueOf(LineCounter) + " " + "IF " + boolexpr + " THEN GOTO exit" + loops+    "\n";
         LineCounter += 10;
-        BasicCode += String.valueOf(LineCounter) + " " + "GOTO exit" +   "\n";
+        BasicCode += String.valueOf(LineCounter) + " " + "GOTO repeat" + temp +   "\n";
         LineCounter += 10;
-        int otherLineCounter = LineCounter;
-        crawlDown(node.getChildren().get(5), currentScope, currentProc);
-        BasicCode+= String.valueOf(LineCounter) + " " + "GOTO "  +enL + "\n";
-        LineCounter += 10;
+//        crawlDown(node.getChildren().get(5), currentScope, currentProc);
         int exitLineCounter = LineCounter;
 
 
-        BasicCode = BasicCode.replace("other" , String.valueOf(otherLineCounter));
+        BasicCode = BasicCode.replace("repeat" , String.valueOf(enL));
         BasicCode = BasicCode.replace("exit" , String.valueOf(exitLineCounter));
 
 
@@ -146,103 +199,110 @@ public class IMCGenerator {
 
 
     private void TransBra(TreeNode node, int currentScope, String currentProc) {
-
-        if(node.getChildren().size() == 9){
-            String boolexpr = TransBoolExpr(node.getChildren().get(2));
-            // int  = branchCount;
+        String boolexpr = TransBoolExpr(node.getChildren().get(2));
+         int branches = branchCount;
 
 
-            BasicCode+= String.valueOf(LineCounter) + " " + "IF " + boolexpr + " Then GOTO thenbranch" + "\n";
-            LineCounter += 10;
-            crawlDown(node.getChildren().get(8), currentScope, currentProc);
-            BasicCode+= String.valueOf(LineCounter) + " " + "GOTO exit" +   "\n";
-            LineCounter += 10;
-            int thenLineCounter = LineCounter;
-            crawlDown(node.getChildren().get(6), currentScope, currentProc);
-            int exitLineCounter = LineCounter;
+        BasicCode+= String.valueOf(LineCounter) + " " + "IF " + boolexpr + " THEN GOTO Branch" + branches + "\n";
+        LineCounter += 10;
+        crawlDown(node.getChildren().get(8), currentScope, currentProc);
+        BasicCode+= String.valueOf(LineCounter) + " " + "GOTO exit" +   "\n";
+        LineCounter += 10;
+        int thenLineCounter = LineCounter;
+        crawlDown(node.getChildren().get(4), currentScope, currentProc);
+        int exitLineCounter = LineCounter;
 
 
-            BasicCode = BasicCode.replace("thenbranch" , String.valueOf(thenLineCounter));
-            BasicCode = BasicCode.replace("exit"  , String.valueOf(exitLineCounter));
-
-
-
-        }else{
-            String boolexpr = TransBoolExpr(node.getChildren().get(2));
-
-
-            BasicCode+= String.valueOf(LineCounter) + " " + "IF " + boolexpr + " Then GOTO thenbranch"  + "\n";
-            LineCounter += 10;
-            BasicCode+= String.valueOf(LineCounter) + " " + "GOTO exit"   + "\n";
-            LineCounter += 10;
-            int thenLineCounter = LineCounter;
-            crawlDown(node.getChildren().get(6), currentScope, currentProc);
-            int exitLineCounter = LineCounter;
-            System.out.println("thenLineCounter: "+thenLineCounter);
-
-            BasicCode = BasicCode.replace("thenbranch" , String.valueOf(thenLineCounter));
-            BasicCode = BasicCode.replace("exit"  , String.valueOf(exitLineCounter));
-
-
-        }
+        BasicCode = BasicCode.replace("branch" , String.valueOf(thenLineCounter));
+        BasicCode = BasicCode.replace("exit"  , String.valueOf(exitLineCounter));
 
     }
 
     private void TransAssgn(TreeNode node) {
         String lefthandside="";
         String righthandside    = "";
-        TreeNode theNode = node.getChildren().get(0); // NUMVAR
+        TreeNode theNode = node.getChildren().get(0).getChildren().get(0); // NUMVAR
 
         theNode = theNode.getChildren().get(1);// DIGITS
 
         String digits = concatenateDigits(theNode);
 
-        if(node.getChildren().get(3).equals("NUMEXPR")){
-            lefthandside = " n" + digits;
+        lefthandside = node.getChildren().get(0).getChildren().get(0).getValue();
+
+        if(node.getChildren().get(3).equals("NAME")){
+//            lefthandside = " n" + digits;
             righthandside = TransNumExpr(node.getChildren().get(3));
             BasicCode += LineCounter  +" LET "+ lefthandside + " = " + righthandside + "\n ";
+            LineCounter++;
         }
-        else if(node.getChildren().get(3).equals("BOOLEXPR")){
-            lefthandside = " b" + digits;
+        else if(node.getChildren().get(3).equals("CONST")){
+//            lefthandside = " b" + digits;
             righthandside = TransBoolExpr(node.getChildren().get(3));
             BasicCode += LineCounter  +" LET "+ lefthandside + " = " + righthandside + "\n ";
+            LineCounter++;
 
-        }else if(node.getChildren().get(3).equals("STRI")){
-            lefthandside = " s" + digits;
-            lefthandside+="$";
-            righthandside = node.getChildren().get(3).getChildren().get(0).getValue();
+        }else{
+            if(node.getChildren().get(0).getValue().equals("add") || node.getChildren().get(0).getValue().equals("mult")){
+                righthandside = TransNumExpr(node);
+            }
+            else if(node.getChildren().get(0).getValue().equals("eq") || node.getChildren().get(0).getValue().equals("or") || node.getChildren().get(0).getValue().equals("and") || node.getChildren().get(0).getValue().equals("not")){
+                righthandside = TransBoolExpr(node);
+            }
             BasicCode += LineCounter  +" LET "+ lefthandside + " = " + righthandside + "\n ";
+            LineCounter++;
 
         }
 
-
-
+        if (lefthandside.equals("text")){
+            righthandside = "\"" + righthandside + "\"";
+            BasicCode += LineCounter + " LET " + lefthandside + " = "+ righthandside + "\n";
+            LineCounter++;
+        }
 
     }
     private String TransBoolExpr(TreeNode node) {
-        if(node.getChildren().get(0).equals("LOGIC")){
-
-
-
-            return TransLogic(node.getChildren().get(0));
+        if(node.getChildren().get(0).getValue().equals("eq")){
+            return TransCmpr(node);
         }
-        else{
+        else if(node.getChildren().get(0).getValue().equals("larger")){
+            return TransCmpr(node);
+        }
+        else if (node.getChildren().get(0).getValue().equals("or")){
+            TransOr(node);
+            return "P";
+        }
+        else if (node.getChildren().get(0).getValue().equals("and")){
+            TransAnd(node);
+            return "P";
+        }
+        else if (node.getChildren().get(0).getValue().equals("not")){
+            TransNot(node);
+            return "P";
+        }
+        else if(node.getChildren().get(0).equals("CONST")){
+            TreeNode cons = node.getChildren().get(0).getChildren().get(0).getChildren().get(0);
+            String val = cons.getValue();
+            if (node.getChildren().get(0).getValue().equals("TRUTH"))
+                val = TransLogic(node.getChildren().get(0));
+            return val;
+        }
+        else if (node.getChildren().get(0).getValue().equals("NAME")){
+            TreeNode tmp = node.getChildren().get(0).getChildren().get(0);
+            String name = formatName(tmp, currentProcID);
 
-
-            return TransCmpr(node.getChildren().get(0));
+            return name;
+        } else {
+            return "";
         }
     }
 
 
 
     private String TransCmpr(TreeNode node) {
-        if(node.getChildren().get(0).equals("E")){
+        if(node.getChildren().get(0).equals("eq")){
             return TransNumExpr(node.getChildren().get(2)) + " = " + TransNumExpr(node.getChildren().get(4));
         }
-        else if(node.getChildren().get(0).equals("<")){
-            return TransNumExpr(node.getChildren().get(2)) + " < " + TransNumExpr(node.getChildren().get(4));
-        }
-        else if(node.getChildren().get(0).equals(">")){
+        else if(node.getChildren().get(0).equals("larger")){
             return TransNumExpr(node.getChildren().get(2)) + " > " + TransNumExpr(node.getChildren().get(4));
         }
         else{
@@ -266,17 +326,17 @@ public class IMCGenerator {
         else if(node.getChildren().get(0).equals("F")){
             return "0";
         }
-        else if(node.getChildren().get(0).equals("^")){
+        else if(node.getChildren().get(0).equals("and")){
             TransAnd(node);
             return "P";
         }
-        else if(node.getChildren().get(0).equals("v")){
+        else if(node.getChildren().get(0).equals("or")){
             TransOr(node);
             return "P";
 
 
         }
-        else if(node.getChildren().get(0).equals("!")){
+        else if(node.getChildren().get(0).equals("not")){
             TransNot(node);
             return "P";
 
@@ -378,42 +438,42 @@ public class IMCGenerator {
 
     String TransNumExpr(TreeNode node){
 
-        if(node.getChildren().get(0).equals("NUMVAR")){
+        if(node.getChildren().get(0).equals("NAME")){
+            TreeNode nm  = node.getChildren().get(0).getChildren().get(0);
+            String var = nm.getValue();
+            var = formatName(nm, currentProcID);
+            return var;
 
+        }else if(node.getChildren().get(0).equals("CONST")){
+            TreeNode cons = node.getChildren().get(0).getChildren().get(0).getChildren().get(0);
+            String val = cons.getValue();
+            return  val;
 
-
-            TreeNode theNode = node.getChildren().get(0).getChildren().get(1);// DIGITS
-
-            String digits = concatenateDigits(theNode);
-
-            return "n" + digits;
-
-        }else if(node.getChildren().get(0).equals("DECNUM")){
-            if(node.getChildren().get(0).getChildren().get(0).equals("0")){
-                return "0.00";
-            }
-            else if(node.getChildren().get(0).getChildren().get(0).equals("POS")){
-                String pos=CollectPos(node.getChildren().get(0).getChildren().get(0));
-                return pos;
-
-            }else if(node.getChildren().get(0).getChildren().get(0).equals("-")){
-
-                String pos2=CollectPos(node.getChildren().get(0).getChildren().get(1));
-                return "-"+pos2;
-
-            }
-
-        }else if(node.getChildren().get(0).equals("a")){
+        }else if(node.getChildren().get(0).equals("add")){
             return TransNumExpr(node.getChildren().get(2)) + "+" + TransNumExpr(node.getChildren().get(4));
 
-        }else if(node.getChildren().get(0).equals("m")){
+        }else if(node.getChildren().get(0).equals("mult")){
             return TransNumExpr(node.getChildren().get(2)) + "*" + TransNumExpr(node.getChildren().get(4));
-
-        }else if(node.getChildren().get(0).equals("d")){
-            return TransNumExpr(node.getChildren().get(2)) + "/" + TransNumExpr(node.getChildren().get(4));
 
         }
         return "";
+    }
+
+    private String formatName(TreeNode var, int currentSCop){
+        String type = "";
+        String name = var.getValue();
+
+        if (var.getParent().getChildren().get(0).getValue().equals("num") || var.getParent().getChildren().get(0).getValue().equals("bool") ){
+            name = name.toUpperCase();
+            name = name.charAt(0) + String.valueOf(name.charAt(2));
+        }
+
+        if (var.getParent().getChildren().get(0).getValue().equals("text") || var.getParent().getChildren().get(0).getValue().equals("proc")){
+            name = name.toUpperCase();
+            name = name.charAt(0) + "$";
+        }
+
+        return name;
     }
 
     private String CollectPos(TreeNode n) {

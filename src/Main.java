@@ -52,8 +52,8 @@ public class Main {
             System.out.println("Done Type Checking...........");
             System.out.println("Generating Code..............");
             IMCGenerator codeGen = new IMCGenerator(namedTree);
-            TreeNode GeneratedCode = codeGen.start();
-            writeToFile(treeString, count++);
+            String GeneratedCode = codeGen.start();
+            writeToFile(GeneratedCode, count++);
             System.out.println("Done generating code.........");
 //..........................Code Generator...............................................
 
