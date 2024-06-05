@@ -23,7 +23,7 @@ public class IMCGenerator {
                 treeRoot.setScope(scope);
                 for (TreeNode child: treeRoot.getChildren())
                 {
-                    crawlDown(child, 1, "PROG");
+                    crawlDown(child, 1, "PROCDEF");
                 }
                 return treeRoot;
             }
@@ -39,7 +39,7 @@ public class IMCGenerator {
 
 
         if(node.isTerminal()){
-            if(node.getValue().equals("PROG")){
+            if(node.getValue().equals("PROCDEF")){
                 if(node.getChildren().size() ==2){
                     crawlDown(node.getChildren().get(0), currentScope, currentProc);
                     BasicCode+= String.valueOf(LineCounter) + " END\n";
@@ -54,7 +54,7 @@ public class IMCGenerator {
                 }
                 return;
             }
-            else if(node.getValue().equals("INPUT")){
+            else if(node.getValue().equals("INOUT")){
 
                 TreeNode theNode = node.getChildren().get(1); // NUMVAR
 

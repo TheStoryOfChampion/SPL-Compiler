@@ -114,7 +114,7 @@ public class VariableAnalysis {
             }
             if(node.isType(SymbolType.DECL))
             {
-                String name = node.lastChild().firstChild().getValue();
+                String name = node.firstChild().firstChild().getValue();
 
                 //  Rule:  Within any one scope, there cannot be more than one declaration for the same variable v
                 if(multipleScopeDeclaration(node))
@@ -172,7 +172,7 @@ public class VariableAnalysis {
             {
                 if(varDec.getScopeID().equals(currentScope.getID()))
                 {
-                    if(sameNameVars(varDec.lastChild(), node))
+                    if(sameNameVars(varDec.firstChild(), node))
                     {
                         node.firstChild().setSemanticName(getSemanticName(varDec));
                         return false;    // return false because it does have a Declaration in scope or ancestor
@@ -206,6 +206,12 @@ public class VariableAnalysis {
             if(dec.getScopeID().equals(node.getScopeID()) && node.getID() != dec.getID())
             {
                 String name1 = dec.lastChild().firstChild().getValue();
+                if (name1 == "NAME"){
+                    name1 = dec.firstChild().getChildren().get(0).getValue();
+                }
+                if(name1 == "D"){
+                    name1 = dec.getChildren().get(0).getChildren().get(0).getChildren().get(0).getValue();
+                }
                 String name2 = node.lastChild().firstChild().getValue();
                 if(name1.equals(name2))
                     return true;
@@ -246,7 +252,7 @@ public class VariableAnalysis {
         for (TreeNode varDec : declarations)
         {
             // if the varDec has the same name as varNode
-            if(sameNameVars(varDec.lastChild(), varNode))
+            if(sameNameVars(varDec.firstChild(), varNode))
             {
                 // if the varDec is parent of varNode
                 if(varNode.getScopeID().equals(varDec.getScopeID()) || isAncestorScope(varDec.getScope(), varNode.getScope()))
@@ -288,7 +294,10 @@ public class VariableAnalysis {
         {
             String name1 = var1.firstChild().getValue();
             if (name1 == "NAME"){
-                name1 = var1.firstChild().getValue();
+                name1 = var1.firstChild().getChildren().get(0).getValue();
+            }
+            if(name1 == "D"){
+                name1 = var1.getChildren().get(0).getChildren().get(0).getChildren().get(0).getValue();
             }
             String name2 = var2.firstChild().getValue();
             return name1.equals(name2);
