@@ -225,7 +225,7 @@ public class Parser {
         if(currentNode.getValue().equals("exec")){
             children.add(match("exec"));
 //            System.out.println(currentNode.getValue());
-            children = addChild(parseVar(), children, SymbolType.NAME);
+            children.add(match(UDN));
         }else
             throw new Exception("[Parse Error] CALLP has no action for " + currentNode);
 

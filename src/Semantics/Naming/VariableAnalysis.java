@@ -287,6 +287,9 @@ public class VariableAnalysis {
         if( var1 != null && var2 != null)
         {
             String name1 = var1.firstChild().getValue();
+            if (name1 == "NAME"){
+                name1 = var1.firstChild().getValue();
+            }
             String name2 = var2.firstChild().getValue();
             return name1.equals(name2);
         }
@@ -365,7 +368,7 @@ public class VariableAnalysis {
 
             if(node.isType(SymbolType.CALLP))
             {
-                String name = node.getValue();
+                String name = node.getChildren().get(1).getValue();
 
                 // Rule: The unique “main” cannot be a UserDefinedName for any declared procedure in an SPL program
                 if(name.equals("main"))
@@ -373,13 +376,17 @@ public class VariableAnalysis {
 
                 //Rule: Any procedure can only call itself or a sub-procedure that is declared in an immediate
                 // Child-scope
-                if(hasCorrespondingPD(node))
-                {
-                    TreeNode pd = getCorrespondingPD(node);
-                    if(pd != null)
-                        node.getChildren().get(1).setSemanticName(getSemanticName(pd));
-//                    return;
-                }else
+//                if(hasCorrespondingPD(node))
+//                {
+//                    TreeNode pd = getCorrespondingPD(node);
+//                    if(pd != null)
+//                        node.getChildren().get(1).setSemanticName(getSemanticName(pd));
+////                    return;
+//                }
+                TreeNode pd = getCorrespondingPD(node);
+                if(pd != null)
+                    node.getChildren().get(1).setSemanticName(getSemanticName(pd));
+                if(pd == null)
                     throw new Exception("[Sementics.Naming Error] no procedure with the name \""+name+"\" was found within procedure calling range");
                 return;
             }
@@ -507,7 +514,11 @@ public class VariableAnalysis {
     private boolean sameNameProc(TreeNode node1, TreeNode node2)
     {
         String name1 = node1.getChildren().get(1).getValue();
-        String name2 = node2.getChildren().get(1).getChildren().get(0).getValue();
+        String name2 = "";
+        if(node2.getChildren().get(1).getValue().equals("NAME"))
+            name2 = node2.getChildren().get(1).getChildren().get(0).getValue();
+        else
+            name2 = node2.getChildren().get(1).getValue();
         return name1.equals(name2);
     }
 

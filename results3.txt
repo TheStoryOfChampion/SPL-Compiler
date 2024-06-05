@@ -1,1 +1,1 @@
-Index 0 out of bounds for length 0
+[Declaration Error] variable "p_1234" cannot be used before declaration
