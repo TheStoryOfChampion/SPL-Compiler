@@ -6,6 +6,8 @@ import Node.SymbolType;
 import Node.TreeNode;
 import com.sun.source.tree.Tree;
 
+import java.sql.SQLInvalidAuthorizationSpecException;
+
 public class IMCGenerator {
     private TreeNode treeRoot;
     static int LineCounter = 10;
@@ -47,7 +49,7 @@ public class IMCGenerator {
         }
 
 
-        if(node.isTerminal()){
+        if(!node.isTerminal()){
             if(node.getValue().equals("PROG")){
                 if(node.getChildren().size() ==2){
                     crawlDown(node.getChildren().get(0), currentScope, currentProc);
@@ -67,16 +69,20 @@ public class IMCGenerator {
                 TreeNode theNode = node.getChildren().get(1); // NUMVAR
                 theNode = theNode.getChildren().get(1); // DIGITS
                 if(node.getChildren().get(0).equals("input")){
-                    theNode = node.getChildren().get(1); // NUMVAR
+//                    TransInput(node, currentProc);
+                    theNode = node.getChildren().get(0); // NUMVAR
                     theNode = theNode.getChildren().get(1);// DIGITS
-                    String digits = concatenateDigits(theNode);
+                    String digits = formatName(theNode, currentScope);
                     BasicCode += LineCounter + " INPUT \"\"; " + " n" + digits + "\n ";
                     LineCounter += 10;
                 }
                 else if(node.getChildren().get(0).equals("print")){ // TEXT OR VALUE
+//                    TransOutput(node, currentScope);
+                    theNode = node.getChildren().get(1); // NUMVAR
+                    theNode = theNode.getChildren().get(1); // DIGITS
                     if (theNode.getValue().equals("text")) {
-                        theNode = theNode.getChildren().get(1); // STRINGV
-                        String digits = concatenateDigits(theNode);
+                        theNode = theNode.getChildren().get(0); // STRINGV
+                        String digits = formatName(theNode, currentScope);
                         TreeNode theNode2 = theNode.getChildren().get(1);
                         BasicCode += LineCounter + "  PRINT ; " + " s" + digits + "$\n ";
                         LineCounter += 10;
@@ -145,8 +151,22 @@ public class IMCGenerator {
             LineCounter += 10;
 
         } else if(node.getValue().equals("dummy")){
-            BasicCode += LineCounter + " RETURN" +"\n ";
-            LineCounter += 10;
+            if(inLoop){
+                inLoop = false;
+                BasicCode += String.valueOf(LineCounter) + " REM LOOP ENDS HERE\n";
+                LineCounter++;
+                return;
+            }
+            else if (inBranch){
+                inBranch = false;
+                BasicCode += String.valueOf(LineCounter) + " REM END OF BRANCH";
+                LineCounter++;
+                return;
+            }
+            else {
+                BasicCode += LineCounter + " RETURN" +"\n ";
+                LineCounter += 10;
+            }
         }
         else if (node.getValue().equals("PROCDEFS")){
             if (!node.getChildren().isEmpty()){
@@ -176,7 +196,7 @@ public class IMCGenerator {
     }
 
     private void TransLP(TreeNode node, int currentScope, String currentProc) {
-        String boolexpr = TransBoolExpr(node.getChildren().get(5));
+        String boolexpr = TransBoolExpr(node.getChildren().get(3));
         int loops = loopCount;
         int enL = LineCounter;
         int temp = loops;
