@@ -1,0 +1,25 @@
+p_0 : proc ,
+p_1 : proc ,
+
+a_1 : num ,
+
+input a_1 ;
+ exec p_0
+print a_1 ;
+ exec p_1 ;
+print a_1 ;
+
+def p_0 { 
+
+a_1 : num ,
+a_1 = 333 ;
+dummy
+
+} 
+
+def p_1 { 
+
+a_1 = 55 ;
+dummy
+
+} 

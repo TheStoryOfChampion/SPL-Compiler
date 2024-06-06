@@ -1,0 +1,11 @@
+p_0 : proc ,
+
+exec p_0 ;
+
+def p_0 { 
+
+s_0 : bool , 
+
+s_0 = "STRING" ; 
+
+dummy }

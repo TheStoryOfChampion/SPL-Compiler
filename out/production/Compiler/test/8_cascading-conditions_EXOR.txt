@@ -1,0 +1,24 @@
+e_0 : proc ,
+s_1 : text ,
+x_1 : num ,
+y_1 : num ,
+
+input x_1 ;
+input y_1 ;
+exec  e_0 ;
+print s_1 ;
+
+def e_0 {
+
+a_1 : bool ,
+b_1 : bool ,
+
+a_1 = larger(x_1 , 3) ;
+b_1 = larger(y_1 , 7) ;
+
+if or(and(a_1,not(b_1)),and(not(a_1),b_1))
+then { s_1 = "TRUE"  ; dummy } 
+else { s_1 = "FALSE" ; } ;
+
+dummy 
+}

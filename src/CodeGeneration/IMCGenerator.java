@@ -50,7 +50,7 @@ public class IMCGenerator {
 
 
         if(!node.isTerminal()){
-            if(node.getValue().equals("PROG")){
+            /*if(node.getValue().equals("PROCDEFS")){
                 if(node.getChildren().size() ==2){
                     crawlDown(node.getChildren().get(0), currentScope, currentProc);
                     BasicCode+= String.valueOf(LineCounter) + "\n";
@@ -65,7 +65,22 @@ public class IMCGenerator {
                 }
                 return;
             }
-            else if(node.getValue().equals("INOUT")){
+            else*/ if(node.getValue().equals("ASSGN")){
+                TransAssgn(node);
+            }
+
+            else if(node.getValue().equals("BRANCH")){
+
+                TransBra(node, currentScope, currentProc);
+                branchCount++;
+                return;
+            }
+            else if(node.getValue().equals("LOOP")){
+
+                TransLP(node, currentScope, currentProc);
+                loopCount++;
+                return;
+            }else if(node.getValue().equals("INOUT")){
                 TreeNode theNode = node.getChildren().get(1); // NUMVAR
                 theNode = theNode.getChildren().get(1); // DIGITS
                 if(node.getChildren().get(0).equals("input")){
@@ -84,7 +99,7 @@ public class IMCGenerator {
                         theNode = theNode.getChildren().get(0); // STRINGV
                         String digits = formatName(theNode, currentScope);
                         TreeNode theNode2 = theNode.getChildren().get(1);
-                        BasicCode += LineCounter + "  PRINT ; " + " s" + digits + "$\n ";
+                        BasicCode += LineCounter + "  PRINT ; " + " s" + digits + "$\n " ;
                         LineCounter += 10;
                     } else if (theNode.getValue().equals("VALUE")) {
                         theNode = theNode.getChildren().get(1); // NUMVAR
@@ -99,95 +114,59 @@ public class IMCGenerator {
 
 
 
+
                 // LineCounter INPUT “”; var_name
 
             }
-            /*else if(node.getValue().equals("OUTPUT")){
-                TreeNode theNode = node.getChildren().get(0); // TEXT OR VALUE
-                if (theNode.getValue().equals("TEXT")) {
-                    theNode = theNode.getChildren().get(1); // STRINGV
+            else if(node.getValue().equals("CALLP")){
+                String procName = node.getChildren().get(1).getValue();
+                BasicCode += String.valueOf(LineCounter)+ " GOSUB " + procName + "\n";
+                LineCounter += 10;
 
-                    TreeNode theNode2 = theNode.getChildren().get(1); // Digits
-                    String digits = concatenateDigits(theNode2);
-                    BasicCode += LineCounter + "  PRINT ; " + " s" + digits + "$\n ";
-                    LineCounter += 10;
-
-
-                } else if (theNode.getValue().equals("VALUE")) {
-                    theNode = theNode.getChildren().get(1); // NUMVAR
-
-                    theNode = theNode.getChildren().get(1);// DIGITS
-
-                    String digits = concatenateDigits(theNode);
-                    BasicCode += LineCounter + "  PRINT ; " + " n" + digits + "\n ";
-                    LineCounter += 10;
-
+            } else if(node.getValue().equals("dummy")){
+                if(inLoop){
+                    inLoop = false;
+                    BasicCode += String.valueOf(LineCounter) + " REM LOOP ENDS HERE\n";
+                    LineCounter++;
+                    return;
                 }
-            }*/
-            else if(node.getValue().equals("ASSGN")){
-                TransAssgn(node);
+                else if (inBranch){
+                    inBranch = false;
+                    BasicCode += String.valueOf(LineCounter) + " REM END OF BRANCH";
+                    LineCounter++;
+                    return;
+                }
+                else {
+                    BasicCode += LineCounter + " RETURN" +"\n ";
+                    LineCounter += 10;
+                }
             }
+            else if (node.getValue().equals("PROCDEFS")){
+                if (!node.getChildren().isEmpty()){
+                    String proc = node.getChildren().get(1).getValue();
+                    for (int c = 0 ; c < BasicCode.length() ; c++){
+                        if (BasicCode.charAt(c) == 'G'){
+                            String gSub = "";
+                            for (int i = c ; i < BasicCode.length() ; i++){
+                                if (BasicCode.charAt(i) == ' ')
+                                    break;
+                                gSub += BasicCode.charAt(i);
+                            }
 
-            else if(node.getValue().equals("BRANCH")){
-
-                TransBra(node, currentScope, currentProc);
-                branchCount++;
-                return;
-            }
-            else if(node.getValue().equals("LOOP")){
-
-                TransLP(node, currentScope, currentProc);
-                loopCount++;
-                return;
+                            if (gSub.equals("GOSUB")){
+                                BasicCode = BasicCode.replace(gSub + " " + proc, gSub + " " + String.valueOf(LineCounter));
+                                break;
+                            }
+                        }
+                    }
+                    crawlDown(node.getChildren().get(2), currentScope, proc);
+                }
             }
 
             for(TreeNode child: node.getChildren()){
                 crawlDown(child, currentScope, currentProc);
             }
 
-        } else if(node.getValue().equals("CALLP")){
-            String procName = node.getChildren().get(1).getChildren().get(0).getValue();
-            BasicCode += String.valueOf(LineCounter)+ " GOSUB " + procName + "\n";
-            LineCounter += 10;
-
-        } else if(node.getValue().equals("dummy")){
-            if(inLoop){
-                inLoop = false;
-                BasicCode += String.valueOf(LineCounter) + " REM LOOP ENDS HERE\n";
-                LineCounter++;
-                return;
-            }
-            else if (inBranch){
-                inBranch = false;
-                BasicCode += String.valueOf(LineCounter) + " REM END OF BRANCH";
-                LineCounter++;
-                return;
-            }
-            else {
-                BasicCode += LineCounter + " RETURN" +"\n ";
-                LineCounter += 10;
-            }
-        }
-        else if (node.getValue().equals("PROCDEFS")){
-            if (!node.getChildren().isEmpty()){
-                String proc = node.getChildren().get(1).getChildren().get(0).getValue();
-                for (int c = 0 ; c < BasicCode.length() ; c++){
-                    if (BasicCode.charAt(c) == 'G'){
-                        String gSub = "";
-                        for (int i = c ; i < BasicCode.length() ; i++){
-                            if (BasicCode.charAt(i) == ' ')
-                                break;
-                            gSub += BasicCode.charAt(i);
-                        }
-
-                        if (gSub.equals("GOSUB")){
-                            BasicCode = BasicCode.replace(gSub + " " + proc, gSub + " " + String.valueOf(LineCounter));
-                            break;
-                        }
-                    }
-                }
-                crawlDown(node.getChildren().get(3), currentScope, proc);
-            }
         }
         else{
 
@@ -319,11 +298,11 @@ public class IMCGenerator {
 
 
     private String TransCmpr(TreeNode node) {
-        if(node.getChildren().get(0).equals("eq")){
-            return TransNumExpr(node.getChildren().get(2)) + " = " + TransNumExpr(node.getChildren().get(4));
+        if(node.getChildren().get(0).getValue().equals("eq")){
+            return formatName(node.getChildren().get(1).getChildren().get(0).getChildren().get(0), currentProcID) + " = " + formatName(node.getChildren().get(2).getChildren().get(0).getChildren().get(0), currentProcID);
         }
-        else if(node.getChildren().get(0).equals("larger")){
-            return TransNumExpr(node.getChildren().get(2)) + " > " + TransNumExpr(node.getChildren().get(4));
+        else if(node.getChildren().get(0).getValue().equals("larger")){
+            return formatName(node.getChildren().get(1).getChildren().get(0).getChildren().get(0), currentProcID) + " > " + formatName(node.getChildren().get(2).getChildren().get(0).getChildren().get(0), currentProcID);
         }
         else{
             return "";

@@ -22,7 +22,7 @@ public class Main {
         try{
 ////////////////////////////START///////////////////////////////////////////////////////
 //..........................Lexer.......................................................
-            Lexer lex = new Lexer("src/test/test2.txt");
+            Lexer lex = new Lexer("src/test/9_test-for-correct-scoping.txt");
             System.out.println("Lexing.......................");
             LinkedList lst = lex.start();
             System.out.println("Done Lexing..................");

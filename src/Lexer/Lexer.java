@@ -253,6 +253,7 @@ public class Lexer {
 
     private void shortString(BufferedReader oReader, char c) throws Exception
     {
+        System.out.println("C is "+ c);
         StringBuilder sShortString = new StringBuilder(String.valueOf(c));
 
         int iStringLength = 0;
@@ -270,7 +271,7 @@ public class Lexer {
             {
                 sShortString.append(c);
                 lst.add(new Node(sShortString.toString(), NodeType.ShortString));
-                return;
+                break;
             }
             else if (!isValidChar(c))
             {
@@ -285,9 +286,17 @@ public class Lexer {
                 throw new Exception(message);
             }
         }
-        message = classErrorName() + sShortString + ". string too long. scanning aborted";
+        if (iStringLength <3 || iStringLength >10)
+        {
+            message = classErrorName() + sShortString + ". String is too short. Aborted";
+            lst.add(new Node(message, NodeType.Error));
+            throw new Exception(message);
+        } else {
+            return;
+        }
+        /*message = classErrorName() + sShortString + ". string too long. scanning aborted";
         lst.add(new Node(message, NodeType.Error));
-        throw new Exception(message);
+        throw new Exception(message);*/
     }
 
     private void insertGroupingSymbol(char c) throws Exception

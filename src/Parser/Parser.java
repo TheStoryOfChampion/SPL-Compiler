@@ -109,7 +109,11 @@ public class Parser {
         else if (isFirst(SymbolType.CODE, currentNode)){
             children = addChild(parseCode(), children, SymbolType.CODE);
             if(isFirst(SymbolType.PROCDEFS, currentNode)){
-                children = addChild(parseProcDefs(), children,SymbolType.PROCDEFS);
+//                children = addChild(parseProcDefs(), children,SymbolType.PROCDEFS);
+                parseSPL();
+            }
+            if(isFirst(SymbolType.DECL, currentNode)) {
+                children = addChild(parseVarDecl(), children, SymbolType.DECL);
             }
 //            return new TreeNode(new Node(SymbolType.PROG.name(), null), children);
         }
@@ -146,8 +150,16 @@ public class Parser {
             children = addChild(parseDec(), children, SymbolType.D);
             children.add(match(","));
 
-            if (isFirst(SymbolType.DECL, currentNode))
-                children = addChild(parseVarDecl(), children, SymbolType.DECL);
+            if (currentNode.next().getValue().equals(":")){
+                if (isFirst(SymbolType.DECL, currentNode))
+                    children = addChild(parseVarDecl(), children, SymbolType.DECL);
+            }/* else if (currentNode.next().getValue().equals("=")){
+                if (isFirst(SymbolType.ASSGN, currentNode))
+                    children = addChild(parseAssign(), children, SymbolType.ASSGN);
+            }*/
+
+
+
 
             return new TreeNode(new Node(SymbolType.DECL.name(), null), children);
         }
@@ -185,11 +197,13 @@ public class Parser {
         if(isFirst(SymbolType.CALLP, currentNode)){
             children = addChild(parseCallP(), children, SymbolType.CALLP);
             children.add(match(";"));
-//            children = addChild(parseCode(), children, SymbolType.CODE);
+            if (isFirst(SymbolType.CODE, currentNode))
+                children = addChild(parseCode(), children, SymbolType.CODE);
         }else if(isFirst(SymbolType.INOUT, currentNode)){
             children = addChild(parseInout(), children, SymbolType.INOUT);
             children.add(match(";"));
-//            children = addChild(parseCode(), children, SymbolType.CODE);
+            if (isFirst(SymbolType.CODE, currentNode))
+                children = addChild(parseCode(), children, SymbolType.CODE);
         }
         else
             throw new Exception("[Parse Error] CODE has no action for " + currentNode);
@@ -211,6 +225,8 @@ public class Parser {
 
             } else if (isFirst(SymbolType.CONST, currentNode)){
                 children = addChild(parseConst(), children, SymbolType.CONST);
+            }else{
+                children.add(match(SS));
             }
         } else
             throw new Exception("[Parse Error] INOUT has no action for " + currentNode);
@@ -258,11 +274,20 @@ public class Parser {
     private TreeNode parseBody() throws Exception
     {
         ArrayList<TreeNode> children = new ArrayList<>();
-
-        if (isFirst(SymbolType.DECL, currentNode)){
-            children = addChild(parseVarDecl(), children, SymbolType.DECL);
+        if (currentNode.next().getValue().equals(":")){
+            if (isFirst(SymbolType.DECL, currentNode)){
+                children = addChild(parseVarDecl(), children, SymbolType.DECL);
+            }
+        } else if (currentNode.next().getValue().equals("=")){
+            if (isFirst(SymbolType.COMMANDS, currentNode)){
+                children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+            }
         }
-        children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+        if (isFirst(SymbolType.COMMANDS, currentNode)){
+                children = addChild(parseAlg(), children, SymbolType.COMMANDS);
+        }
+
+//        children = addChild(parseAlg(), children, SymbolType.COMMANDS);
         return new TreeNode(new Node(SymbolType.BODY.name(), null), children);
     }
 
@@ -276,6 +301,13 @@ public class Parser {
             children = addChild(parseAlg(), children, SymbolType.COMMANDS);
         } else if(currentNode.getValue().equals("dummy")){
             children.add(match("dummy"));
+            return new TreeNode(new Node(SymbolType.COMMANDS.name(), null), children) ;
+        }
+        else if (currentNode.getValue().equals("}")){
+            if (!currentNode.Prev().getValue().equals("dummy"))
+                throw new Exception("[Parse Error] COMMANDS has no dummy return " );
+
+            return new TreeNode(new Node(SymbolType.COMMANDS.name(), null), children);
         }
         else
             throw new Exception("[Parse Error] COMMANDS has no action for "+currentNode );
@@ -430,6 +462,7 @@ public class Parser {
             children = addChild(parseVar(), children, SymbolType.NAME);
             children.add(match("="));
             children = addChild(parseExpr(), children, SymbolType.EXPR);
+//            children.add(match(";"));
 
             return new TreeNode(new Node(SymbolType.ASSGN.name(), null), children);
         }
@@ -532,6 +565,7 @@ public class Parser {
                 list.add(UDN);
                 list.add("=");
                 list.addAll(first(SymbolType.EXPR));
+//                list.add(";");
                 break;
             /*case LHS:
                 list.add("output");

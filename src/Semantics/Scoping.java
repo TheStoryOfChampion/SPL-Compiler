@@ -27,7 +27,7 @@ public class Scoping {
                 return treeRoot;
             }
         }
-        throw new Exception("Program is not in SPL");
+        throw new Exception("Program is empty");
 
     }
 

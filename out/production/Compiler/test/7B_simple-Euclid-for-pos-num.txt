@@ -1,0 +1,27 @@
+e_0 : proc,
+a_1 : num,
+b_1 : num,
+o_0 : num,
+
+input a_1;
+input b_1;
+ exec e_0;
+print o_0;
+
+def e_0 { 
+
+if eq(a_1,b_1) 
+then { o_0 = a_1; dummy} 
+else { repeat {
+
+if larger( a_1 , b_1 )  
+then { b_1 = mult( b_1 , -1 ) ; 
+       a_1 = add( a_1 , b_1 ) ; 
+       b_1 = mult( b_1 , -1 ) ; dummy } 
+else { a_1 = mult( a_1 , -1 ) ; 
+       b_1 = add( b_1 , a_1 ) ; 
+       a_1 = mult( a_1 , -1 ) ; dummy } ; 
+dummy } 
+until eq(a_1,b_1) ; o_0 = a_1 ; dummy } ;
+
+dummy }

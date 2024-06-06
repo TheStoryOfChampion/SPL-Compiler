@@ -1,0 +1,15 @@
+p_0 : proc ,
+
+print x_1 ; 
+
+exec p_0 ;
+
+def p_0 { 
+
+x_1 : num , 
+
+x_1 = 1 ;
+
+dummy
+
+}

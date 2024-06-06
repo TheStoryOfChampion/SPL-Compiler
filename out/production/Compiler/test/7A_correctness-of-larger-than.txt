@@ -1,0 +1,26 @@
+p_0 : proc,
+p_1 : proc,
+p_2 : proc,
+o_0 : text,
+
+ exec p_0;
+print o_0;
+ exec p_1;
+print o_0;
+ exec p_2;
+print o_0;
+
+def p_0 { 
+if larger(55,33) 
+then { o_0 = "OK"; dummy } 
+else { o_0 = "ERROR"; dummy} ; dummy }
+
+def p_1 { 
+if larger(44,44) 
+then { o_0 = "ERROR"; dummy } 
+else { o_0 = "OK"; dummy} ; dummy }
+
+def p_2 { 
+if larger(44,66) 
+then { o_0 = "ERROR"; dummy } 
+else { o_0 = "OK"; dummy} ; dummy }

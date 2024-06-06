@@ -1,0 +1,18 @@
+e_0 : proc ,
+a_1 : num ,
+
+ exec e_0 ;
+print a_1 ;
+
+def e_0 { 
+
+m_1 : num ,
+m_1 = 1 ;
+a_1 = 0 ;
+
+repeat { m_1 = add( m_1 , 1 );
+         a_1 = add( a_1 , 1 ); 
+         dummy } 
+until eq( m_1 , 9 ) ;
+dummy }
+ 
