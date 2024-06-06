@@ -16,6 +16,8 @@ The example code is in the "Test" subdirectory, should you want to peruse it or 
 
 Should you want to see the results, after running it, in the root of the prioject there will be 3 new text files (if ran successfully), each indicating the diferent steps of the compiler (Parsing, Scoping, Type Checking). Peruse these files.
 
+As it stands right now, only the lexer and parser work properly. The Type checker and intermediate code generator don't necessarily do what they're supposed to. I will return to them when I feel better. Until then, when you run this program only the lexer should pass and fail as necessary. When I do fix it, I will remove this passage from the readme file. Please do contact me if you have any questions. at mbofho47@gmail.com. 
+
 # The Grammar is as follows:
 
 PROG ::= DECL CODE PROCDEFS
